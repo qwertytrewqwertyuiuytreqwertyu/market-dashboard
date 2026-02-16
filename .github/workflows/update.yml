@@ -31,5 +31,12 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+
           git add docs/data.json docs/data.csv
-          git diff --cached --quiet || (git commit -m "Update KR data" && git push)
+          git diff --cached --quiet && exit 0
+
+          git commit -m "Update KR data" || exit 0
+
+          git pull --rebase origin main
+
+          git push
