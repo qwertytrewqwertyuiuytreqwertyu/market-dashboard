@@ -5,7 +5,6 @@ function kstNow() {
   const d = new Date(Date.now() + 9 * 60 * 60 * 1000);
   return d.toISOString().replace("T", " ").slice(0, 19);
 }
-
 function fmtNum(x, d = 2) {
   if (x == null || !Number.isFinite(x)) return "";
   return x.toFixed(d);
@@ -19,95 +18,87 @@ function fmtTrillionUSD(x) {
   return `${x.toFixed(2)} T USD`;
 }
 
-/**
- * "Index-like" number extractor:
- * - skip date-like YYYY.MM(.DD)
- * - take first realistic index number
- */
-function pickBestIndexNumber(text) {
+function pickIndex(text) {
+  // pick first index-looking number (>= 100), skip YYYY.MM
   const s = (text || "").replace(/\s+/g, " ").trim();
-  const tokens = s.match(/(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d{4,}(?:\.\d+)?|\d+\.\d+)/g) || [];
+  const tokens =
+    s.match(/(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d{4,}(?:\.\d+)?|\d+\.\d+)/g) || [];
   const cands = [];
   for (const tok of tokens) {
     const t = tok.replace(/,/g, "");
-    if (/^\d{4}\.\d{2}(\.\d{2})?$/.test(t)) continue; // date-like
+    if (/^\d{4}\.\d{2}(\.\d{2})?$/.test(t)) continue;
     const n = Number(t);
-    if (!Number.isFinite(n)) continue;
-    if (n < 100) continue;
+    if (!Number.isFinite(n) || n < 100) continue;
     cands.push(n);
   }
   if (!cands.length) return null;
-  for (const n of cands) {
-    if (n >= 500 && n <= 100000) return n;
-  }
-  return Math.max(...cands);
+  // prefer realistic index ranges
+  for (const n of cands) if (n >= 1000 && n <= 100000) return n;
+  for (const n of cands) if (n >= 500 && n <= 100000) return n;
+  return cands[0];
 }
 
-async function getDaumGlobalCurrentText(page) {
-  return await page.evaluate(() => {
+async function fetchDaumIndexExact(page, label, url, fetchedAtKst) {
+  await page.goto(url, { waitUntil: "networkidle" });
+  await page.waitForTimeout(1200);
+
+  // current: try to target only the main quote box by limiting to the first "section"
+  const currentText = await page.evaluate(() => {
     const norm = s => (s || "").replace(/\s+/g, " ").trim();
-    const roots = [
-      document.querySelector("main"),
-      document.querySelector("#__next"),
-      document.querySelector("#wrap"),
-      document.body
-    ].filter(Boolean);
+    const root =
+      document.querySelector("main") ||
+      document.querySelector("#__next") ||
+      document.querySelector("#wrap") ||
+      document.body;
 
-    for (const r of roots) {
-      const header = r.querySelector("header");
-      if (header) {
-        const t = norm(header.innerText);
-        if (t) return t;
-      }
-      const sec = r.querySelector("section");
-      if (sec) {
-        const t = norm(sec.innerText);
-        if (t) return t;
-      }
-      const t = norm(r.innerText);
-      if (t) return t.slice(0, 1500);
+    // Prefer: first section that contains "전일지수" (often quote card area)
+    const secs = Array.from(root.querySelectorAll("section"));
+    for (const s of secs) {
+      const t = norm(s.innerText);
+      if (t.includes("전일지수") || t.includes("전일")) return t;
     }
-    return "";
+    // fallback: header + small slice
+    const header = root.querySelector("header");
+    if (header) return norm(header.innerText);
+    return norm(root.innerText).slice(0, 1200);
   });
-}
 
-async function getDaumGlobalPrevText(page) {
-  return await page.evaluate(() => {
+  // prev: STRICTLY from the "전일지수" container
+  const prevText = await page.evaluate(() => {
     const norm = s => (s || "").replace(/\s+/g, " ").trim();
     const labelText = "전일지수";
+
     const labelEl = Array.from(document.querySelectorAll("*"))
       .find(el => norm(el.textContent) === labelText || norm(el.textContent).includes(labelText));
     if (!labelEl) return "";
 
-    const container =
+    // try sibling first (often the value is next to label)
+    const parent = labelEl.parentElement;
+    if (parent) {
+      const sibText = norm(parent.innerText || "");
+      if (sibText) return sibText.slice(0, 300);
+    }
+
+    const box =
       labelEl.closest("li, tr, dl, div, section") ||
       labelEl.parentElement ||
       document.body;
 
-    const t = norm(container.innerText || container.textContent || "");
-    return t.slice(0, 800);
+    return norm(box.innerText || "").slice(0, 500);
   });
-}
 
-async function fetchDaumGlobalIndex(page, label, url, fetchedAtKst) {
-  await page.goto(url, { waitUntil: "networkidle" });
-  await page.waitForTimeout(800);
-
-  const currentText = await getDaumGlobalCurrentText(page);
-  const prevText = await getDaumGlobalPrevText(page);
-
-  const cur = pickBestIndexNumber(currentText);
+  const cur = pickIndex(currentText);
 
   let prev = null;
   if (prevText) {
     const idx = prevText.indexOf("전일지수");
     const after = idx >= 0 ? prevText.slice(idx + "전일지수".length) : prevText;
-    prev = pickBestIndexNumber(after);
+    prev = pickIndex(after);
   }
 
-  // guardrail: if prev is absurd vs cur, drop it
+  // guardrail: drop absurd prev
   if (cur != null && prev != null) {
-    if (prev > cur * 10 || prev < cur / 10) prev = null;
+    if (prev > cur * 1.5 || prev < cur * 0.5) prev = null;
   }
 
   const chg = (cur != null && prev != null) ? (cur - prev) : null;
@@ -127,65 +118,8 @@ async function fetchDaumGlobalIndex(page, label, url, fetchedAtKst) {
   };
 }
 
-/** FinanceCharts S&P500 market cap (sum Market Cap column) */
-function parseUsdWithUnitToNumber(s) {
-  if (!s) return null;
-  const t = String(s).replace(/\s+/g, "").replace("$", "");
-  const m = t.match(/^([0-9,.]+)([TBM])$/i) || t.match(/^([0-9,.]+)$/);
-  if (!m) return null;
-
-  const val = Number(m[1].replace(/,/g, ""));
-  if (!Number.isFinite(val)) return null;
-
-  const unit = (m[2] || "").toUpperCase();
-  if (unit === "T") return val * 1e12;
-  if (unit === "B") return val * 1e9;
-  if (unit === "M") return val * 1e6;
-  return val;
-}
-
-async function fetchFinanceChartsSP500TotalMarketCapTrillionUSD(page) {
-  await page.goto("https://www.financecharts.com/screener/sp-500", { waitUntil: "networkidle" });
-  await page.waitForTimeout(800);
-
-  const { marketCaps, asofText } = await page.evaluate(() => {
-    const norm = s => (s || "").replace(/\s+/g, " ").trim();
-    const body = norm(document.body?.innerText || "");
-    const asofMatch = body.match(/Last updated\s+([A-Za-z]{3}\s+\d{1,2},\s+\d{4})/);
-    const asofText = asofMatch ? `Last updated ${asofMatch[1]}` : "";
-
-    const tables = Array.from(document.querySelectorAll("table"));
-    const target = tables.find(tb => {
-      const th = Array.from(tb.querySelectorAll("th")).map(x => norm(x.innerText));
-      return th.includes("Market Cap") && (th.includes("Ticker") || th.includes("Symbol"));
-    });
-    if (!target) return { marketCaps: [], asofText };
-
-    const rows = Array.from(target.querySelectorAll("tbody tr"));
-    const marketCaps = rows.map(tr => {
-      const tds = Array.from(tr.querySelectorAll("td")).map(td => norm(td.innerText));
-      // FinanceCharts table shown: Market Cap is column 4 in view (index 3)
-      return tds[3] || "";
-    }).filter(Boolean);
-
-    return { marketCaps, asofText };
-  });
-
-  let sumUsd = 0;
-  for (const mc of marketCaps) {
-    const n = parseUsdWithUnitToNumber(mc);
-    if (Number.isFinite(n)) sumUsd += n;
-  }
-  return { trillion: sumUsd / 1e12, asofText };
-}
-
-/**
- * NASDAQ market cap (match your Excel method):
- * - use Nasdaq screener download dataset (the same dataset behind "Download CSV")
- * - sum the MarketCap field across ALL rows (equivalent to summing column F in the CSV)
- */
+/* ===== NASDAQ Screener download total market cap (your CSV method) ===== */
 async function fetchNasdaqDownloadTotalMarketCapTrillionUSD() {
-  // NOTE: no exchange filter => aligns with "download CSV then sum column F" unless you apply filters on site.
   const url = "https://api.nasdaq.com/api/screener/stocks?download=true";
   const res = await fetch(url, {
     headers: {
@@ -195,10 +129,9 @@ async function fetchNasdaqDownloadTotalMarketCapTrillionUSD() {
       origin: "https://www.nasdaq.com"
     }
   });
-  if (!res.ok) throw new Error(`Nasdaq screener download failed: ${res.status}`);
+  if (!res.ok) throw new Error(`Nasdaq download failed: ${res.status}`);
   const js = await res.json();
   const rows = js?.data?.rows ?? [];
-
   let sum = 0;
   for (const r of rows) {
     const v = Number(String(r.marketCap ?? "").replace(/,/g, ""));
@@ -207,31 +140,100 @@ async function fetchNasdaqDownloadTotalMarketCapTrillionUSD() {
   return sum / 1e12;
 }
 
+/* ===== FinanceCharts S&P500 market cap (robust: wait + scroll + multi-table hunt) ===== */
+function parseUsdWithUnitToNumber(s) {
+  if (!s) return null;
+  const t = String(s).replace(/\s+/g, "").replace("$", "");
+  const m = t.match(/^([0-9,.]+)([TBM])$/i) || t.match(/^([0-9,.]+)$/);
+  if (!m) return null;
+  const val = Number(m[1].replace(/,/g, ""));
+  if (!Number.isFinite(val)) return null;
+  const unit = (m[2] || "").toUpperCase();
+  if (unit === "T") return val * 1e12;
+  if (unit === "B") return val * 1e9;
+  if (unit === "M") return val * 1e6;
+  return val;
+}
+
+async function fetchFinanceChartsSP500TotalMarketCapTrillionUSD(page) {
+  const url = "https://www.financecharts.com/screener/sp-500";
+  await page.goto(url, { waitUntil: "networkidle" });
+
+  // wait longer; site is often lazy-loaded
+  await page.waitForTimeout(2500);
+  await page.mouse.wheel(0, 2500);
+  await page.waitForTimeout(1200);
+
+  const res = await page.evaluate(() => {
+    const norm = s => (s || "").replace(/\s+/g, " ").trim();
+    const body = norm(document.body?.innerText || "");
+    const asofMatch = body.match(/Last updated\s+([A-Za-z]{3}\s+\d{1,2},\s+\d{4})/);
+    const asofText = asofMatch ? `Last updated ${asofMatch[1]}` : "";
+
+    const tables = Array.from(document.querySelectorAll("table"));
+
+    // find any table that has a "Market Cap" header
+    let target = null;
+    for (const tb of tables) {
+      const th = Array.from(tb.querySelectorAll("th")).map(x => norm(x.innerText));
+      if (th.includes("Market Cap")) {
+        target = tb;
+        break;
+      }
+    }
+
+    if (!target) return { marketCaps: [], asofText, debug: "no table with Market Cap header" };
+
+    const th = Array.from(target.querySelectorAll("th")).map(x => norm(x.innerText));
+    const iCap = th.findIndex(x => x === "Market Cap");
+    if (iCap < 0) return { marketCaps: [], asofText, debug: "Market Cap header not found index" };
+
+    const rows = Array.from(target.querySelectorAll("tbody tr"));
+    const marketCaps = rows.map(tr => {
+      const tds = Array.from(tr.querySelectorAll("td")).map(td => norm(td.innerText));
+      return tds[iCap] || "";
+    }).filter(Boolean);
+
+    return { marketCaps, asofText, debug: `rows=${marketCaps.length}` };
+  });
+
+  let sumUsd = 0;
+  for (const mc of res.marketCaps) {
+    const n = parseUsdWithUnitToNumber(mc);
+    if (Number.isFinite(n)) sumUsd += n;
+  }
+
+  return { trillion: sumUsd / 1e12, asofText: res.asofText, debug: res.debug };
+}
+
 (async () => {
   const fetchedAtKst = kstNow();
 
   const browser = await chromium.launch();
   const page = await browser.newPage({ userAgent: "Mozilla/5.0" });
 
-  // Indices (Daum)
-  const spx = await fetchDaumGlobalIndex(page, "S&P 500", "https://finance.daum.net/global/quotes/US.SP500", fetchedAtKst);
-  const comp = await fetchDaumGlobalIndex(page, "NASDAQ Composite", "https://finance.daum.net/global/quotes/US.COMP", fetchedAtKst);
+  // Daum indices
+  const spx = await fetchDaumIndexExact(page, "S&P 500", "https://finance.daum.net/global/quotes/US.SP500", fetchedAtKst);
+  const comp = await fetchDaumIndexExact(page, "NASDAQ Composite", "https://finance.daum.net/global/quotes/US.COMP", fetchedAtKst);
 
-  // S&P 500 market cap (FinanceCharts)
+  // S&P 500 market cap
   try {
     const sp = await fetchFinanceChartsSP500TotalMarketCapTrillionUSD(page);
-    spx.market_cap = fmtTrillionUSD(sp.trillion);
+    if (sp.trillion > 0) spx.market_cap = fmtTrillionUSD(sp.trillion);
     if (sp.asofText) spx.asof_kst = `${spx.asof_kst} | FinanceCharts: ${sp.asofText}`;
-  } catch {
+    console.log("SP500 MC DEBUG:", sp.debug, "tril=", sp.trillion);
+  } catch (e) {
+    console.log("SP500 MC ERROR:", String(e));
     spx.market_cap = "";
   }
 
-  // NASDAQ total market cap (Nasdaq download dataset, Excel-compatible sum)
+  // NASDAQ market cap (download dataset sum)
   try {
     const nasTril = await fetchNasdaqDownloadTotalMarketCapTrillionUSD();
     comp.market_cap = fmtTrillionUSD(nasTril);
     comp.asof_kst = `${comp.asof_kst} | Nasdaq Screener download`;
-  } catch {
+  } catch (e) {
+    console.log("NASDAQ MC ERROR:", String(e));
     comp.market_cap = "";
   }
 
