@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta http-equiv="refresh" content="120">
+<title>Market Dashboard</title>
+<style>
+body{font-family:Arial;padding:20px}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid #ccc;padding:6px}
+th{background:#f0f0f0}
+</style>
+</head>
+<body>
+<h2>Market Dashboard</h2>
+<div id="meta"></div>
+<br>
+<a href="./data.csv">Download CSV (Excel)</a>
+<br><br>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Name</th>
+<th>Date</th>
+<th>Current</th>
+<th>Previous</th>
+<th>Change</th>
+<th>%</th>
+<th>MarketCap</th>
+<th>AsOf</th>
+</tr>
+</thead>
+<tbody id="rows"></tbody>
+</table>
+<script>
+(async ()=>{
+const res=await fetch('./data.json?_='+Date.now());
+const data=await res.json();
+document.getElementById('meta').innerText="Last updated (KST): "+data.updated_at;
+const tbody=document.getElementById('rows');
+data.rows.forEach(r=>{
+const tr=document.createElement('tr');
+tr.innerHTML=`
+<td>${r.type}</td>
+<td>${r.code}</td>
+<td>${r.date||""}</td>
+<td>${r.value||""}</td>
+<td>${r.prev_value||""}</td>
+<td>${r.change||""}</td>
+<td>${r.change_pct||""}</td>
+<td>${r.market_cap||""}</td>
+<td>${r.asof_kst||""}</td>
+`;
+tbody.appendChild(tr);
+});
+})();
+</script>
+</body>
+</html>
