@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-02-17 01:24:43",
+  "updated_at": "2026-02-17 01:42:15",
   "rows": [
     {
       "type": "index",
@@ -15,7 +15,7 @@
       "foreign": "-9,220",
       "institution": "831",
       "asof_kst": "상장종목 현황 직전영업일 구분 KOSPI KOSDAQ KONEX *신규상장 기업수 : 당일 기준 연누적 데이터",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "index",
@@ -31,7 +31,7 @@
       "foreign": "",
       "institution": "",
       "asof_kst": "상장종목 현황 직전영업일 구분 KOSPI KOSDAQ KONEX *신규상장 기업수 : 당일 기준 연누적 데이터",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "index",
@@ -47,7 +47,7 @@
       "foreign": "-2,414",
       "institution": "-3,381",
       "asof_kst": "상장종목 현황 직전영업일 구분 KOSPI KOSDAQ KONEX *신규상장 기업수 : 당일 기준 연누적 데이터",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "index",
@@ -63,7 +63,7 @@
       "foreign": "",
       "institution": "",
       "asof_kst": "상장종목 현황 직전영업일 구분 KOSPI KOSDAQ KONEX *신규상장 기업수 : 당일 기준 연누적 데이터",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "stock",
@@ -78,8 +78,8 @@
       "personal": "",
       "foreign": "",
       "institution": "",
-      "asof_kst": "2026-02-17 01:24:43",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "asof_kst": "2026-02-17 01:42:15",
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "stock",
@@ -94,8 +94,8 @@
       "personal": "",
       "foreign": "",
       "institution": "",
-      "asof_kst": "2026-02-17 01:24:43",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "asof_kst": "2026-02-17 01:42:15",
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "stock",
@@ -110,8 +110,8 @@
       "personal": "",
       "foreign": "",
       "institution": "",
-      "asof_kst": "2026-02-17 01:24:43",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "asof_kst": "2026-02-17 01:42:15",
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "stock",
@@ -126,8 +126,8 @@
       "personal": "",
       "foreign": "",
       "institution": "",
-      "asof_kst": "2026-02-17 01:24:43",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "asof_kst": "2026-02-17 01:42:15",
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "stock",
@@ -142,8 +142,8 @@
       "personal": "",
       "foreign": "",
       "institution": "",
-      "asof_kst": "2026-02-17 01:24:43",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "asof_kst": "2026-02-17 01:42:15",
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "stock",
@@ -158,8 +158,8 @@
       "personal": "",
       "foreign": "",
       "institution": "",
-      "asof_kst": "2026-02-17 01:24:43",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "asof_kst": "2026-02-17 01:42:15",
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "stock",
@@ -174,8 +174,8 @@
       "personal": "",
       "foreign": "",
       "institution": "",
-      "asof_kst": "2026-02-17 01:24:43",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "asof_kst": "2026-02-17 01:42:15",
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "stock",
@@ -190,8 +190,8 @@
       "personal": "",
       "foreign": "",
       "institution": "",
-      "asof_kst": "2026-02-17 01:24:43",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "asof_kst": "2026-02-17 01:42:15",
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "stock",
@@ -206,8 +206,8 @@
       "personal": "",
       "foreign": "",
       "institution": "",
-      "asof_kst": "2026-02-17 01:24:43",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "asof_kst": "2026-02-17 01:42:15",
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "stock",
@@ -222,8 +222,8 @@
       "personal": "",
       "foreign": "",
       "institution": "",
-      "asof_kst": "2026-02-17 01:24:43",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "asof_kst": "2026-02-17 01:42:15",
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "stock",
@@ -238,8 +238,8 @@
       "personal": "",
       "foreign": "",
       "institution": "",
-      "asof_kst": "2026-02-17 01:24:43",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "asof_kst": "2026-02-17 01:42:15",
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "stock",
@@ -254,8 +254,8 @@
       "personal": "",
       "foreign": "",
       "institution": "",
-      "asof_kst": "2026-02-17 01:24:43",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "asof_kst": "2026-02-17 01:42:15",
+      "fetched_at_kst": "2026-02-17 01:42:15"
     },
     {
       "type": "stock",
@@ -270,8 +270,40 @@
       "personal": "",
       "foreign": "",
       "institution": "",
-      "asof_kst": "2026-02-17 01:24:43",
-      "fetched_at_kst": "2026-02-17 01:24:43"
+      "asof_kst": "2026-02-17 01:42:15",
+      "fetched_at_kst": "2026-02-17 01:42:15"
+    },
+    {
+      "type": "us_index",
+      "code": "S&P 500",
+      "date": "",
+      "value": "2026.02",
+      "prev_value": "",
+      "change": "",
+      "change_pct": "",
+      "market_cap": "",
+      "trade_value": "",
+      "personal": "",
+      "foreign": "",
+      "institution": "",
+      "asof_kst": "2026-02-17 01:40:21",
+      "fetched_at_kst": "2026-02-17 01:40:21"
+    },
+    {
+      "type": "us_index",
+      "code": "NASDAQ Composite",
+      "date": "",
+      "value": "2026.02",
+      "prev_value": "",
+      "change": "",
+      "change_pct": "",
+      "market_cap": "45.02 T USD",
+      "trade_value": "",
+      "personal": "",
+      "foreign": "",
+      "institution": "",
+      "asof_kst": "2026-02-17 01:40:21",
+      "fetched_at_kst": "2026-02-17 01:40:21"
     }
   ]
 }
