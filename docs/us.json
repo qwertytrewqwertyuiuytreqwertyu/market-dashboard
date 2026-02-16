@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-02-17 01:57:49",
+  "updated_at": "2026-02-17 02:15:24",
   "rows": [
     {
       "type": "us_index",
@@ -14,8 +14,8 @@
       "personal": "",
       "foreign": "",
       "institution": "",
-      "asof_kst": "2026-02-17 01:57:49",
-      "fetched_at_kst": "2026-02-17 01:57:49"
+      "asof_kst": "2026-02-17 02:15:24",
+      "fetched_at_kst": "2026-02-17 02:15:24"
     },
     {
       "type": "us_index",
@@ -30,8 +30,8 @@
       "personal": "",
       "foreign": "",
       "institution": "",
-      "asof_kst": "2026-02-17 01:57:49",
-      "fetched_at_kst": "2026-02-17 01:57:49"
+      "asof_kst": "2026-02-17 02:15:24",
+      "fetched_at_kst": "2026-02-17 02:15:24"
     }
   ]
 }
