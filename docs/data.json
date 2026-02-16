@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-02-17 03:06:50",
+  "updated_at": "2026-02-17 03:16:47",
   "rows": [
     {
       "type": "index",
@@ -11,7 +11,7 @@
       "change_pct": "-0.28%",
       "market_cap": "4,553,532",
       "asof_kst": "KRX 직전영업일",
-      "fetched_at_kst": "2026-02-17 03:06:19"
+      "fetched_at_kst": "2026-02-17 03:16:19"
     },
     {
       "type": "index",
@@ -23,7 +23,7 @@
       "change_pct": "",
       "market_cap": "",
       "asof_kst": "KRX 직전영업일",
-      "fetched_at_kst": "2026-02-17 03:06:19"
+      "fetched_at_kst": "2026-02-17 03:16:19"
     },
     {
       "type": "index",
@@ -35,7 +35,7 @@
       "change_pct": "-1.77%",
       "market_cap": "606,577",
       "asof_kst": "KRX 직전영업일",
-      "fetched_at_kst": "2026-02-17 03:06:21"
+      "fetched_at_kst": "2026-02-17 03:16:21"
     },
     {
       "type": "index",
@@ -47,7 +47,7 @@
       "change_pct": "",
       "market_cap": "",
       "asof_kst": "KRX 직전영업일",
-      "fetched_at_kst": "2026-02-17 03:06:21"
+      "fetched_at_kst": "2026-02-17 03:16:21"
     },
     {
       "type": "stock",
@@ -58,8 +58,8 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-02-17 03:06:27",
-      "fetched_at_kst": "2026-02-17 03:06:27"
+      "asof_kst": "2026-02-17 03:16:26",
+      "fetched_at_kst": "2026-02-17 03:16:26"
     },
     {
       "type": "stock",
@@ -70,8 +70,8 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-02-17 03:06:29",
-      "fetched_at_kst": "2026-02-17 03:06:29"
+      "asof_kst": "2026-02-17 03:16:29",
+      "fetched_at_kst": "2026-02-17 03:16:29"
     },
     {
       "type": "stock",
@@ -82,8 +82,8 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-02-17 03:06:31",
-      "fetched_at_kst": "2026-02-17 03:06:31"
+      "asof_kst": "2026-02-17 03:16:31",
+      "fetched_at_kst": "2026-02-17 03:16:31"
     },
     {
       "type": "stock",
@@ -94,8 +94,8 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-02-17 03:06:33",
-      "fetched_at_kst": "2026-02-17 03:06:33"
+      "asof_kst": "2026-02-17 03:16:33",
+      "fetched_at_kst": "2026-02-17 03:16:33"
     },
     {
       "type": "stock",
@@ -106,8 +106,8 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-02-17 03:06:35",
-      "fetched_at_kst": "2026-02-17 03:06:35"
+      "asof_kst": "2026-02-17 03:16:34",
+      "fetched_at_kst": "2026-02-17 03:16:34"
     },
     {
       "type": "stock",
@@ -118,8 +118,8 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-02-17 03:06:37",
-      "fetched_at_kst": "2026-02-17 03:06:37"
+      "asof_kst": "2026-02-17 03:16:36",
+      "fetched_at_kst": "2026-02-17 03:16:36"
     },
     {
       "type": "stock",
@@ -130,8 +130,8 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-02-17 03:06:39",
-      "fetched_at_kst": "2026-02-17 03:06:39"
+      "asof_kst": "2026-02-17 03:16:37",
+      "fetched_at_kst": "2026-02-17 03:16:37"
     },
     {
       "type": "stock",
@@ -142,8 +142,8 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-02-17 03:06:41",
-      "fetched_at_kst": "2026-02-17 03:06:41"
+      "asof_kst": "2026-02-17 03:16:39",
+      "fetched_at_kst": "2026-02-17 03:16:39"
     },
     {
       "type": "stock",
@@ -154,8 +154,8 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-02-17 03:06:43",
-      "fetched_at_kst": "2026-02-17 03:06:43"
+      "asof_kst": "2026-02-17 03:16:40",
+      "fetched_at_kst": "2026-02-17 03:16:40"
     },
     {
       "type": "stock",
@@ -166,8 +166,8 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-02-17 03:06:45",
-      "fetched_at_kst": "2026-02-17 03:06:45"
+      "asof_kst": "2026-02-17 03:16:42",
+      "fetched_at_kst": "2026-02-17 03:16:42"
     },
     {
       "type": "stock",
@@ -178,8 +178,8 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-02-17 03:06:47",
-      "fetched_at_kst": "2026-02-17 03:06:47"
+      "asof_kst": "2026-02-17 03:16:44",
+      "fetched_at_kst": "2026-02-17 03:16:44"
     },
     {
       "type": "stock",
@@ -190,8 +190,8 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-02-17 03:06:49",
-      "fetched_at_kst": "2026-02-17 03:06:49"
+      "asof_kst": "2026-02-17 03:16:45",
+      "fetched_at_kst": "2026-02-17 03:16:45"
     },
     {
       "type": "stock",
@@ -202,20 +202,20 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-02-17 03:06:50",
-      "fetched_at_kst": "2026-02-17 03:06:50"
+      "asof_kst": "2026-02-17 03:16:47",
+      "fetched_at_kst": "2026-02-17 03:16:47"
     },
     {
       "type": "us_index",
       "code": "S&P 500",
       "date": "",
-      "value": "3350767.00",
-      "prev_value": "3350767.00",
-      "change": "0.00",
-      "change_pct": "0.00%",
+      "value": "5000.00",
+      "prev_value": "",
+      "change": "",
+      "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-02-17 02:56:38",
-      "fetched_at_kst": "2026-02-17 02:56:38"
+      "asof_kst": "2026-02-17 03:11:45",
+      "fetched_at_kst": "2026-02-17 03:11:45"
     },
     {
       "type": "us_index",
@@ -226,8 +226,8 @@
       "change": "-50.48",
       "change_pct": "-0.22%",
       "market_cap": "95.08 T USD",
-      "asof_kst": "2026-02-17 02:56:38 | Nasdaq Screener download",
-      "fetched_at_kst": "2026-02-17 02:56:38"
+      "asof_kst": "2026-02-17 03:11:45 | Nasdaq Screener download",
+      "fetched_at_kst": "2026-02-17 03:11:45"
     }
   ]
 }
