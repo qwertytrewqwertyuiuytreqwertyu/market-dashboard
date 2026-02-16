@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-02-17 01:42:15",
+  "updated_at": "2026-02-17 02:00:07",
   "rows": [
     {
       "type": "index",
@@ -10,12 +10,7 @@
       "change": "-15.26",
       "change_pct": "-0.28%",
       "market_cap": "",
-      "trade_value": "30,820,999",
-      "personal": "7,141",
-      "foreign": "-9,220",
-      "institution": "831",
-      "asof_kst": "상장종목 현황 직전영업일 구분 KOSPI KOSDAQ KONEX *신규상장 기업수 : 당일 기준 연누적 데이터",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "KRX 직전영업일"
     },
     {
       "type": "index",
@@ -26,12 +21,7 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "상장종목 현황 직전영업일 구분 KOSPI KOSDAQ KONEX *신규상장 기업수 : 당일 기준 연누적 데이터",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "KRX 직전영업일"
     },
     {
       "type": "index",
@@ -42,12 +32,7 @@
       "change": "-19.91",
       "change_pct": "-1.77%",
       "market_cap": "",
-      "trade_value": "11,251,180",
-      "personal": "6,220",
-      "foreign": "-2,414",
-      "institution": "-3,381",
-      "asof_kst": "상장종목 현황 직전영업일 구분 KOSPI KOSDAQ KONEX *신규상장 기업수 : 당일 기준 연누적 데이터",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "KRX 직전영업일"
     },
     {
       "type": "index",
@@ -58,252 +43,150 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "상장종목 현황 직전영업일 구분 KOSPI KOSDAQ KONEX *신규상장 기업수 : 당일 기준 연누적 데이터",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "KRX 직전영업일"
     },
     {
       "type": "stock",
       "code": "Hyundai Rotem",
       "date": "",
-      "value": "064",
+      "value": "201,500",
       "prev_value": "",
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "2026-02-17 01:42:15",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "2026-02-17 01:59:43"
     },
     {
       "type": "stock",
       "code": "Hanwha Aerospace",
       "date": "",
-      "value": "012",
+      "value": "1,105,000",
       "prev_value": "",
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "2026-02-17 01:42:15",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "2026-02-17 01:59:45"
     },
     {
       "type": "stock",
       "code": "Korea Aerospace Industries",
       "date": "",
-      "value": "047",
+      "value": "176,700",
       "prev_value": "",
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "2026-02-17 01:42:15",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "2026-02-17 01:59:46"
     },
     {
       "type": "stock",
       "code": "LIG Nex1",
       "date": "",
-      "value": "079",
+      "value": "460,000",
       "prev_value": "",
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "2026-02-17 01:42:15",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "2026-02-17 01:59:48"
     },
     {
       "type": "stock",
       "code": "다원시스",
       "date": "",
-      "value": "068",
+      "value": "2,485",
       "prev_value": "",
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "2026-02-17 01:42:15",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "2026-02-17 01:59:50"
     },
     {
       "type": "stock",
       "code": "Hyundai Motor Company",
       "date": "",
-      "value": "005",
+      "value": "499,000",
       "prev_value": "",
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "2026-02-17 01:42:15",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "2026-02-17 01:59:54"
     },
     {
       "type": "stock",
       "code": "Kia",
       "date": "",
-      "value": "000",
+      "value": "164,100",
       "prev_value": "",
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "2026-02-17 01:42:15",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "2026-02-17 01:59:56"
     },
     {
       "type": "stock",
       "code": "Hyundai Mobis",
       "date": "",
-      "value": "012",
+      "value": "435,000",
       "prev_value": "",
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "2026-02-17 01:42:15",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "2026-02-17 01:59:57"
     },
     {
       "type": "stock",
       "code": "Hyundai Glovis",
       "date": "",
-      "value": "086",
+      "value": "255,000",
       "prev_value": "",
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "2026-02-17 01:42:15",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "2026-02-17 01:59:59"
     },
     {
       "type": "stock",
       "code": "Hyundai AutoEver",
       "date": "",
-      "value": "307",
+      "value": "436,500",
       "prev_value": "",
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "2026-02-17 01:42:15",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "2026-02-17 02:00:01"
     },
     {
       "type": "stock",
       "code": "Hyundai Wia",
       "date": "",
-      "value": "011",
+      "value": "83,900",
       "prev_value": "",
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "2026-02-17 01:42:15",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "2026-02-17 02:00:03"
     },
     {
       "type": "stock",
       "code": "Samsung Electronics",
       "date": "",
-      "value": "005",
+      "value": "181,200",
       "prev_value": "",
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "2026-02-17 01:42:15",
-      "fetched_at_kst": "2026-02-17 01:42:15"
+      "asof_kst": "2026-02-17 02:00:05"
     },
     {
       "type": "stock",
       "code": "SK Hynix",
       "date": "",
-      "value": "000",
+      "value": "880,000",
       "prev_value": "",
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "2026-02-17 01:42:15",
-      "fetched_at_kst": "2026-02-17 01:42:15"
-    },
-    {
-      "type": "us_index",
-      "code": "S&P 500",
-      "date": "",
-      "value": "2026.02",
-      "prev_value": "",
-      "change": "",
-      "change_pct": "",
-      "market_cap": "",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "2026-02-17 01:40:21",
-      "fetched_at_kst": "2026-02-17 01:40:21"
-    },
-    {
-      "type": "us_index",
-      "code": "NASDAQ Composite",
-      "date": "",
-      "value": "2026.02",
-      "prev_value": "",
-      "change": "",
-      "change_pct": "",
-      "market_cap": "45.02 T USD",
-      "trade_value": "",
-      "personal": "",
-      "foreign": "",
-      "institution": "",
-      "asof_kst": "2026-02-17 01:40:21",
-      "fetched_at_kst": "2026-02-17 01:40:21"
+      "asof_kst": "2026-02-17 02:00:07"
     }
   ]
 }
