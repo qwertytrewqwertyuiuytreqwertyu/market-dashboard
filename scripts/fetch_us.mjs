@@ -27,12 +27,10 @@ function calc(cur, prev) {
   return { chg, pct };
 }
 
-// ------------------------------
-// 1) Daum GLOBAL: API-first (best)
-// ------------------------------
-async function daumApiQuote(code /* e.g., US.SP500 */) {
-  // Daum finance는 종종 내부 API를 사용합니다.
-  // 환경/시점에 따라 경로가 달라질 수 있어 후보를 여러 개 시도합니다.
+/* ------------------------------
+   Daum API (best-effort)
+-------------------------------- */
+async function daumApiQuote(code) {
   const candidates = [
     `https://finance.daum.net/api/quotes/${code}`,
     `https://finance.daum.net/api/quote/${code}`,
@@ -41,9 +39,19 @@ async function daumApiQuote(code /* e.g., US.SP500 */) {
   ];
 
   const headers = {
-    "accept": "application/json, text/plain, */*",
+    accept: "application/json, text/plain, */*",
     "user-agent": "Mozilla/5.0",
-    "referer": `https://finance.daum.net/global/quotes/${code}`,
+    referer: `https://finance.daum.net/global/quotes/${code}`,
+  };
+
+  const pick = (obj, keys) => {
+    for (const k of keys) {
+      if (obj && k in obj) {
+        const n = toNum(obj[k]);
+        if (n != null) return n;
+      }
+    }
+    return null;
   };
 
   for (const url of candidates) {
@@ -51,21 +59,6 @@ async function daumApiQuote(code /* e.g., US.SP500 */) {
       const res = await fetch(url, { headers });
       if (!res.ok) continue;
       const js = await res.json();
-
-      // 구조가 환경마다 달라서 “가능성 높은 키들”을 넓게 커버
-      // current: tradePrice / price / closePrice / currentPrice / indexValue 등
-      // prev: prevTradePrice / prevPrice / previousPrice / prevClosePrice / prevIndexValue 등
-      const pick = (obj, keys) => {
-        for (const k of keys) {
-          if (obj && k in obj) {
-            const n = toNum(obj[k]);
-            if (n != null) return n;
-          }
-        }
-        return null;
-      };
-
-      // js.data 형태 / js 자체가 데이터인 형태 모두 대응
       const root = js?.data ?? js;
 
       const cur =
@@ -76,85 +69,88 @@ async function daumApiQuote(code /* e.g., US.SP500 */) {
         pick(root, ["prevTradePrice", "prevPrice", "previousPrice", "prevClosePrice", "prevIndexValue", "yesterdayPrice"]) ??
         pick(root?.quote, ["prevTradePrice", "prevPrice", "previousPrice", "prevClosePrice", "prevIndexValue", "yesterdayPrice"]);
 
-      // date는 있으면 넣고 없으면 공란
-      const date =
-        (root?.tradeDate ?? root?.date ?? root?.quote?.tradeDate ?? root?.quote?.date ?? "").toString();
+      const date = (root?.tradeDate ?? root?.date ?? root?.quote?.tradeDate ?? root?.quote?.date ?? "").toString();
 
-      if (cur != null) {
-        return { ok: true, cur, prev, date };
-      }
-    } catch {
-      // try next candidate
-    }
+      if (cur != null) return { ok: true, cur, prev, date };
+    } catch {}
   }
   return { ok: false, cur: null, prev: null, date: "" };
 }
 
-// -----------------------------------------------------
-// 2) Daum GLOBAL: Playwright DOM fallback (label-based)
-//    (전체 숫자 훑기 금지 / “현재지수/전일지수” 주변만)
-// -----------------------------------------------------
+/* ------------------------------
+   Daum DOM fallback (label-based, improved prev extraction)
+-------------------------------- */
 async function daumDomQuote(page, code) {
   await page.goto(`https://finance.daum.net/global/quotes/${code}`, { waitUntil: "networkidle" });
   await page.waitForTimeout(1200);
 
-  // “현재지수” 라벨이 있는 박스에서 숫자 1개 추출
-  const cur = await page.evaluate(() => {
+  // current: from "현재지수" block
+  const curStr = await page.evaluate(() => {
     const norm = (s) => (s || "").replace(/\s+/g, " ").trim();
+    const label = "현재지수";
+    const el = Array.from(document.querySelectorAll("*"))
+      .find(x => norm(x.textContent) === label || norm(x.textContent).includes(label));
+    if (!el) return null;
 
-    function extractAround(label) {
-      // label을 포함하는 가장 가까운 컨테이너에서 숫자 찾기
-      const all = Array.from(document.querySelectorAll("*"));
-      const el = all.find((x) => norm(x.textContent) === label);
-      if (!el) return null;
-      const box = el.closest("dl, li, div, section, article") || el.parentElement;
-      if (!box) return null;
-      const txt = norm(box.innerText);
-      // label 이후 텍스트에서 숫자 하나만 (6,836.17 같은)
-      const after = txt.split(label).slice(1).join(" ");
-      const m = after.match(/(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+))/);
-      return m ? m[1] : null;
-    }
+    const box = el.closest("dl, li, div, section, article") || el.parentElement;
+    if (!box) return null;
 
-    return extractAround("현재지수") || extractAround("현재") || null;
+    const t = norm(box.innerText || "");
+    const idx = t.indexOf(label);
+    const after = idx >= 0 ? t.slice(idx + label.length) : t;
+    const m = after.match(/(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+))/);
+    return m ? m[1] : null;
   });
 
-  const prev = await page.evaluate(() => {
+  const cur = toNum(curStr);
+
+  // prev: choose number in "전일지수" container closest to current (prevents huge wrong numbers)
+  const prev = await page.evaluate((curVal) => {
     const norm = (s) => (s || "").replace(/\s+/g, " ").trim();
+    const label = "전일지수";
+    const el = Array.from(document.querySelectorAll("*"))
+      .find(x => norm(x.textContent) === label || norm(x.textContent).includes(label));
+    if (!el) return null;
 
-    function extractAround(label) {
-      const all = Array.from(document.querySelectorAll("*"));
-      const el = all.find((x) => norm(x.textContent) === label || norm(x.textContent).includes(label));
-      if (!el) return null;
-      const box = el.closest("dl, li, div, section, article") || el.parentElement;
-      if (!box) return null;
-      const txt = norm(box.innerText);
-      const idx = txt.indexOf(label);
-      const after = idx >= 0 ? txt.slice(idx + label.length) : txt;
-      const m = after.match(/(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+))/);
-      return m ? m[1] : null;
+    const box = el.closest("dl, li, div, section, article") || el.parentElement;
+    if (!box) return null;
+
+    // extract ALL numbers inside that box
+    const txt = norm(box.innerText || "");
+    const nums = (txt.match(/(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+))/g) || [])
+      .map(s => Number(s.replace(/,/g, "")))
+      .filter(n => Number.isFinite(n) && n >= 100 && n <= 200000);
+
+    if (!nums.length) return null;
+    if (!Number.isFinite(curVal)) return nums[0];
+
+    // pick number closest to current (prev should be near current)
+    let best = nums[0];
+    let bestDiff = Math.abs(nums[0] - curVal);
+    for (const n of nums) {
+      const d = Math.abs(n - curVal);
+      if (d < bestDiff) { best = n; bestDiff = d; }
     }
+    return best;
+  }, cur);
 
-    return extractAround("전일지수") || extractAround("전일") || null;
-  });
-
-  // 날짜(있으면)
+  // date (best-effort)
   const date = await page.evaluate(() => {
     const norm = (s) => (s || "").replace(/\s+/g, " ").trim();
     const body = norm(document.body?.innerText || "");
-    // Daum이 날짜를 표기하는 형태가 다양해서, 있으면 잡고 없으면 공란
     const m =
+      body.match(/\b(\d{8})\b/) || // 20260213 같은 형태도 잡힘
       body.match(/\b(\d{4}\.\d{2}\.\d{2})\b/) ||
       body.match(/\b(\d{2}\.\d{2}\.\d{2})\b/);
     return m ? m[1] : "";
   });
 
-  return { cur: toNum(cur), prev: toNum(prev), date };
+  return { cur, prev: toNum(prev), date };
 }
 
-// ------------------------------
-// 3) Market cap helpers
-// ------------------------------
+/* ------------------------------
+   Market cap helpers
+-------------------------------- */
 function parseUsdWithUnitToNumber(s) {
   if (!s) return null;
   const t = String(s).replace(/\s+/g, "").replace("$", "");
@@ -171,7 +167,6 @@ function parseUsdWithUnitToNumber(s) {
   return val;
 }
 
-// FinanceCharts S&P500 (download excel sum column D) — 페이지에서 “Market Cap” 합산 추출
 async function fetchFinanceChartsSP500TotalMarketCapTrillionUSD(page) {
   await page.goto("https://www.financecharts.com/screener/sp-500", { waitUntil: "networkidle" });
   await page.waitForTimeout(2500);
@@ -186,10 +181,7 @@ async function fetchFinanceChartsSP500TotalMarketCapTrillionUSD(page) {
     let target = null;
     for (const tb of tables) {
       const th = Array.from(tb.querySelectorAll("th")).map((x) => norm(x.innerText));
-      if (th.includes("Market Cap")) {
-        target = tb;
-        break;
-      }
+      if (th.includes("Market Cap")) { target = tb; break; }
     }
     if (!target) return { marketCaps: [], asofText };
 
@@ -198,12 +190,10 @@ async function fetchFinanceChartsSP500TotalMarketCapTrillionUSD(page) {
     if (iCap < 0) return { marketCaps: [], asofText };
 
     const rows = Array.from(target.querySelectorAll("tbody tr"));
-    const marketCaps = rows
-      .map((tr) => {
-        const tds = Array.from(tr.querySelectorAll("td")).map((td) => norm(td.innerText));
-        return tds[iCap] || "";
-      })
-      .filter(Boolean);
+    const marketCaps = rows.map(tr => {
+      const tds = Array.from(tr.querySelectorAll("td")).map(td => norm(td.innerText));
+      return tds[iCap] || "";
+    }).filter(Boolean);
 
     return { marketCaps, asofText };
   });
@@ -216,7 +206,6 @@ async function fetchFinanceChartsSP500TotalMarketCapTrillionUSD(page) {
   return { trillion: sumUsd / 1e12, asofText };
 }
 
-// Nasdaq screener download (your “download csv sum column F” definition)
 async function fetchNasdaqDownloadTotalMarketCapTrillionUSD() {
   const url = "https://api.nasdaq.com/api/screener/stocks?download=true";
   const res = await fetch(url, {
@@ -239,17 +228,15 @@ async function fetchNasdaqDownloadTotalMarketCapTrillionUSD() {
   return sum / 1e12;
 }
 
-// ------------------------------
-// 4) Main
-// ------------------------------
+/* ------------------------------
+   Main
+-------------------------------- */
 async function fetchDaumIndex(code, fetchedAtKst, page) {
-  // 1) API 먼저
   const api = await daumApiQuote(code);
   let cur = api.ok ? api.cur : null;
   let prev = api.ok ? api.prev : null;
   let date = api.ok ? api.date : "";
 
-  // 2) API 실패/prev 공란이면 DOM fallback
   if (cur == null || prev == null) {
     const dom = await daumDomQuote(page, code);
     cur = cur ?? dom.cur;
@@ -257,7 +244,6 @@ async function fetchDaumIndex(code, fetchedAtKst, page) {
     date = date || dom.date || "";
   }
 
-  // 3) sanity (S&P500이면 1000~20000 범위, NASDAQ comp면 1000~50000 범위)
   const guard =
     code === "US.SP500"
       ? (n) => n != null && n >= 1000 && n <= 20000
@@ -288,27 +274,20 @@ async function fetchDaumIndex(code, fetchedAtKst, page) {
   const browser = await chromium.launch();
   const page = await browser.newPage({ userAgent: "Mozilla/5.0" });
 
-  // Daum: 반드시 user가 준 소스(US.SP500 / US.COMP)로 “현재지수/전일지수” 가져오기
   const spx = await fetchDaumIndex("US.SP500", fetchedAtKst, page);
   const comp = await fetchDaumIndex("US.COMP", fetchedAtKst, page);
 
-  // S&P500 market cap: FinanceCharts 합산 (가능하면 채움)
   try {
     const sp = await fetchFinanceChartsSP500TotalMarketCapTrillionUSD(page);
     if (sp.trillion > 0) spx.market_cap = fmtTrillionUSD(sp.trillion);
     if (sp.asofText) spx.asof_kst = `${spx.asof_kst} | FinanceCharts: ${sp.asofText}`;
-  } catch {
-    // leave blank
-  }
+  } catch {}
 
-  // NASDAQ market cap: Nasdaq screener download 합산 (너가 말한 방식)
   try {
     const nasTril = await fetchNasdaqDownloadTotalMarketCapTrillionUSD();
     comp.market_cap = fmtTrillionUSD(nasTril);
     comp.asof_kst = `${comp.asof_kst} | Nasdaq Screener download`;
-  } catch {
-    // leave blank
-  }
+  } catch {}
 
   await browser.close();
 
