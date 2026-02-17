@@ -1,4 +1,29 @@
 {
-  "updated_at": "2026-02-17 15:41:03",
-  "rows": []
+  "updated_at": "2026-02-17 15:51:32",
+  "rows": [
+    {
+      "type": "us_index",
+      "code": "S&P 500",
+      "date": "",
+      "value": "",
+      "prev_value": "",
+      "change": "",
+      "change_pct": "",
+      "market_cap": "",
+      "asof_kst": "2026-02-17 15:51:32 | FinanceCharts download",
+      "fetched_at_kst": "2026-02-17 15:51:32"
+    },
+    {
+      "type": "us_index",
+      "code": "NASDAQ Composite",
+      "date": "",
+      "value": "",
+      "prev_value": "",
+      "change": "",
+      "change_pct": "",
+      "market_cap": "95.08 T USD",
+      "asof_kst": "2026-02-17 15:51:32 | Nasdaq Screener download",
+      "fetched_at_kst": "2026-02-17 15:51:32"
+    }
+  ]
 }
