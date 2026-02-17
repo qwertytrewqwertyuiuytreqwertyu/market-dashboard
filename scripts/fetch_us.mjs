@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import * as XLSX from "xlsx";
+import { chromium } from "playwright";
 
 /* ---------- utils ---------- */
 
@@ -24,48 +25,66 @@ function fmtTril(x) {
   return x == null ? "" : Number(x).toFixed(2) + " T USD";
 }
 
-function extractNextData(html) {
+/* ---------- Daum (Playwright) ---------- */
+/**
+ * Pulls index value and change from Daum GLOBAL quote pages using browser context.
+ * Then prev = current - change, pct computed from prev/current.
+ */
+async function fetchDaumGlobalViaPlaywright(page, code) {
+  const url = `https://finance.daum.net/global/quotes/${code}`;
+  await page.goto(url, { waitUntil: "networkidle" });
+  await page.waitForTimeout(1200);
+
+  const html = await page.content();
+
   const m = html.match(/<script[^>]+id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i);
   if (!m) return null;
-  try { return JSON.parse(m[1]); } catch { return null; }
-}
 
-function findBestQuote(nextData, min, max) {
-  // 목표: current + change(전일비) + date
-  const CUR_KEYS = ["tradePrice", "currentPrice", "price", "closePrice", "lastPrice", "indexValue"];
+  let next;
+  try {
+    next = JSON.parse(m[1]);
+  } catch {
+    return null;
+  }
+
+  // DFS search for a best matching object with:
+  // current in plausible range, change in plausible range
+  const guard = code === "US.SP500"
+    ? { min: 1000, max: 20000 }
+    : { min: 1000, max: 60000 };
+
+  const CUR_KEYS = ["indexValue", "tradePrice", "currentPrice", "lastPrice", "closePrice", "price"];
   const CHG_KEYS = ["changePrice", "change", "netChange", "changeValue"];
   const DATE_KEYS = ["tradeDate", "date"];
 
-  const isIdx = (n) => n != null && Number.isFinite(n) && n >= min && n <= max;
+  const isIdx = (n) => n != null && Number.isFinite(n) && n >= guard.min && n <= guard.max;
   const isChg = (n) => n != null && Number.isFinite(n) && Math.abs(n) <= 5000;
 
-  const pick = (obj, keys, pred) => {
-    for (const k of keys) {
-      if (obj && Object.prototype.hasOwnProperty.call(obj, k)) {
-        const n = toNum(obj[k]);
-        if (pred(n)) return n;
-      }
-    }
-    return null;
-  };
-
   let best = { score: -1, current: null, change: null, date: "" };
-
-  const stack = [nextData];
+  const stack = [next];
   const seen = new Set();
   let steps = 0;
 
-  while (stack.length && steps < 200000) {
+  while (stack.length && steps < 250000) {
     const node = stack.pop();
     steps++;
+
     if (!node || typeof node !== "object") continue;
     if (seen.has(node)) continue;
     seen.add(node);
 
-    const current = pick(node, CUR_KEYS, isIdx);
-    const change = pick(node, CHG_KEYS, isChg);
-
+    let current = null;
+    let change = null;
     let date = "";
+
+    for (const k of CUR_KEYS) {
+      const n = toNum(node[k]);
+      if (isIdx(n)) current = n;
+    }
+    for (const k of CHG_KEYS) {
+      const n = toNum(node[k]);
+      if (isChg(n)) change = n;
+    }
     for (const k of DATE_KEYS) {
       const v = node?.[k];
       if (typeof v === "string" || typeof v === "number") {
@@ -78,9 +97,7 @@ function findBestQuote(nextData, min, max) {
     if (current != null) score += 6;
     if (change != null) score += 6;
     if (date) score += 1;
-
-    // 더 신뢰되는 패턴: current가 중간값, change가 비교적 작은 값
-    if (current != null && current >= min + 200 && current <= max) score += 2;
+    if (current != null && current >= guard.min + 200 && current <= guard.max) score += 2;
     if (change != null && Math.abs(change) <= 500) score += 2;
 
     if (score > best.score) best = { score, current, change, date };
@@ -88,55 +105,33 @@ function findBestQuote(nextData, min, max) {
     if (Array.isArray(node)) {
       for (const x of node) stack.push(x);
     } else {
-      for (const v of Object.values(node)) {
-        if (v && typeof v === "object") stack.push(v);
-      }
+      for (const v of Object.values(node)) if (v && typeof v === "object") stack.push(v);
     }
   }
 
-  return { current: best.current, change: best.change, date: best.date };
+  if (best.current == null || best.change == null) return null;
+
+  const prev = best.current - best.change;
+  const pct = prev !== 0 ? ((best.current / prev - 1) * 100) : null;
+
+  return {
+    date: best.date || "",
+    current: best.current,
+    prev,
+    change: best.change,
+    pct
+  };
 }
 
-/* ---------- 1) Daum US index (manual download HTML -> __NEXT_DATA__) ---------- */
-
-async function fetchDaumGlobalFromHtml(code) {
-  const url = `https://finance.daum.net/global/quotes/${code}`;
-  const res = await fetch(url, {
-    headers: {
-      "user-agent": "Mozilla/5.0",
-      "accept": "text/html,*/*",
-      "referer": url
-    }
-  });
-
-  if (!res.ok) return null;
-
-  const html = await res.text();
-  const nextData = extractNextData(html);
-  if (!nextData) return null;
-
-  const guard = (code === "US.SP500") ? { min: 1000, max: 20000 } : { min: 1000, max: 60000 };
-  const q = findBestQuote(nextData, guard.min, guard.max);
-
-  if (q.current == null || q.change == null) return null;
-
-  const prev = q.current - q.change;
-  const pct = prev !== 0 ? ((q.current / prev - 1) * 100) : null;
-
-  return { date: q.date || "", current: q.current, prev, change: q.change, pct };
-}
-
-/* ---------- 2) NASDAQ Total Market Cap (download dataset sum) ---------- */
-
+/* ---------- NASDAQ market cap (download sum) ---------- */
 async function fetchNasdaqTotalTril() {
   const res = await fetch("https://api.nasdaq.com/api/screener/stocks?download=true", {
     headers: {
       "user-agent": "Mozilla/5.0",
-      "referer": "https://www.nasdaq.com/market-activity/stocks/screener",
-      "origin": "https://www.nasdaq.com"
+      referer: "https://www.nasdaq.com/market-activity/stocks/screener",
+      origin: "https://www.nasdaq.com"
     }
   });
-
   if (!res.ok) return null;
 
   const js = await res.json();
@@ -150,22 +145,17 @@ async function fetchNasdaqTotalTril() {
   return sum / 1e12;
 }
 
-/* ---------- 3) S&P 500 Total Market Cap (FinanceCharts download=1 Excel) ---------- */
-
+/* ---------- S&P500 market cap (FinanceCharts download Excel) ---------- */
 async function fetchSP500TotalTril() {
   const res = await fetch("https://www.financecharts.com/screener/sp-500?download=1", {
     headers: {
       "user-agent": "Mozilla/5.0",
-      "referer": "https://www.financecharts.com/screener/sp-500",
-      "accept": "*/*"
+      referer: "https://www.financecharts.com/screener/sp-500"
     }
   });
-
   if (!res.ok) return null;
 
   const buf = Buffer.from(await res.arrayBuffer());
-
-  // 차단되면 HTML이 내려와서 XLSX가 throw -> caller에서 null 처리
   const wb = XLSX.read(buf, { type: "buffer" });
   const ws = wb.Sheets[wb.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true });
@@ -177,9 +167,9 @@ async function fetchSP500TotalTril() {
   if (capIdx < 0) return null;
 
   let sumUsd = 0;
-
   for (let i = 1; i < rows.length; i++) {
     const v = rows[i]?.[capIdx];
+
     if (typeof v === "number" && Number.isFinite(v)) {
       sumUsd += v;
     } else if (typeof v === "string") {
@@ -203,43 +193,91 @@ async function fetchSP500TotalTril() {
 (async () => {
   const now = kstNow();
 
-  const sp = await fetchDaumGlobalFromHtml("US.SP500");
-  const nq = await fetchDaumGlobalFromHtml("US.COMP");
+  // Always output both rows (never empty)
+  const spRow = {
+    type: "us_index",
+    code: "S&P 500",
+    date: "",
+    value: "",
+    prev_value: "",
+    change: "",
+    change_pct: "",
+    market_cap: "",
+    asof_kst: now,
+    fetched_at_kst: now
+  };
 
-  let spCap = null;
-  let nqCap = null;
+  const nqRow = {
+    type: "us_index",
+    code: "NASDAQ Composite",
+    date: "",
+    value: "",
+    prev_value: "",
+    change: "",
+    change_pct: "",
+    market_cap: "",
+    asof_kst: now,
+    fetched_at_kst: now
+  };
 
-  try { spCap = await fetchSP500TotalTril(); } catch { spCap = null; }
-  try { nqCap = await fetchNasdaqTotalTril(); } catch { nqCap = null; }
+  // 1) Daum values via Playwright (fixes your blank value/prev/change/%)
+  try {
+    const browser = await chromium.launch();
+    const page = await browser.newPage({ userAgent: "Mozilla/5.0" });
 
-  const rows = [
-    {
-      type: "us_index",
-      code: "S&P 500",
-      date: sp?.date ?? "",
-      value: fmt(sp?.current),
-      prev_value: fmt(sp?.prev),
-      change: fmt(sp?.change),
-      change_pct: fmtPct(sp?.pct),
-      market_cap: fmtTril(spCap),
-      asof_kst: spCap != null ? `${now} | FinanceCharts download` : `${now} | FinanceCharts download (failed)`,
-      fetched_at_kst: now
-    },
-    {
-      type: "us_index",
-      code: "NASDAQ Composite",
-      date: nq?.date ?? "",
-      value: fmt(nq?.current),
-      prev_value: fmt(nq?.prev),
-      change: fmt(nq?.change),
-      change_pct: fmtPct(nq?.pct),
-      market_cap: fmtTril(nqCap),
-      asof_kst: nqCap != null ? `${now} | Nasdaq Screener download` : `${now} | Nasdaq Screener download (failed)`,
-      fetched_at_kst: now
+    const sp = await fetchDaumGlobalViaPlaywright(page, "US.SP500");
+    if (sp) {
+      spRow.date = sp.date;
+      spRow.value = fmt(sp.current);
+      spRow.prev_value = fmt(sp.prev);
+      spRow.change = fmt(sp.change);
+      spRow.change_pct = fmtPct(sp.pct);
     }
-  ];
 
-  const payload = { updated_at: now, rows };
+    const nq = await fetchDaumGlobalViaPlaywright(page, "US.COMP");
+    if (nq) {
+      nqRow.date = nq.date;
+      nqRow.value = fmt(nq.current);
+      nqRow.prev_value = fmt(nq.prev);
+      nqRow.change = fmt(nq.change);
+      nqRow.change_pct = fmtPct(nq.pct);
+    }
+
+    await browser.close();
+  } catch {
+    // keep blanks if Daum ever fails, but rows still exist
+  }
+
+  // 2) Market caps via downloads
+  try {
+    const spCap = await fetchSP500TotalTril();
+    if (spCap != null) {
+      spRow.market_cap = fmtTril(spCap);
+      spRow.asof_kst = `${spRow.asof_kst} | FinanceCharts download`;
+    } else {
+      spRow.asof_kst = `${spRow.asof_kst} | FinanceCharts download (failed)`;
+    }
+  } catch {
+    spRow.asof_kst = `${spRow.asof_kst} | FinanceCharts download (failed)`;
+  }
+
+  try {
+    const nqCap = await fetchNasdaqTotalTril();
+    if (nqCap != null) {
+      nqRow.market_cap = fmtTril(nqCap);
+      nqRow.asof_kst = `${nqRow.asof_kst} | Nasdaq Screener download`;
+    } else {
+      nqRow.asof_kst = `${nqRow.asof_kst} | Nasdaq Screener download (failed)`;
+    }
+  } catch {
+    nqRow.asof_kst = `${nqRow.asof_kst} | Nasdaq Screener download (failed)`;
+  }
+
+  const payload = {
+    updated_at: now,
+    rows: [spRow, nqRow]
+  };
+
   fs.writeFileSync("docs/us.json", JSON.stringify(payload, null, 2), "utf-8");
   console.log(payload);
 })();
