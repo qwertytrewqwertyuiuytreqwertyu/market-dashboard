@@ -1,19 +1,17 @@
 import fs from "node:fs";
 import * as XLSX from "xlsx";
+import { chromium } from "playwright";
 
-/* ---------------- utils ---------------- */
-
+/* ---------- utils ---------- */
 function kstNow() {
   const d = new Date(Date.now() + 9 * 60 * 60 * 1000);
   return d.toISOString().replace("T", " ").slice(0, 19);
 }
-
 function toNum(v) {
   if (v == null) return null;
   const n = Number(String(v).replace(/,/g, "").replace(/[^\d.-]/g, ""));
   return Number.isFinite(n) ? n : null;
 }
-
 function fmt(x, d = 2) {
   return x == null ? "" : Number(x).toFixed(d);
 }
@@ -24,134 +22,60 @@ function fmtTril(x) {
   return x == null ? "" : Number(x).toFixed(2) + " T USD";
 }
 
-/** Depth-first search for fields inside unknown JSON shapes */
-function deepFindQuoteFields(obj, guardMin, guardMax) {
-  const CUR_KEYS = ["indexValue", "tradePrice", "currentPrice", "lastPrice", "closePrice", "price"];
-  const CHG_KEYS = ["changePrice", "change", "netChange", "changeValue"];
-  const DATE_KEYS = ["tradeDate", "date", "tradeDateTime"];
-
-  const inRange = (n) => n != null && Number.isFinite(n) && n >= guardMin && n <= guardMax;
-  const chgOk = (n) => n != null && Number.isFinite(n) && Math.abs(n) <= 5000;
-
-  let best = { score: -1, current: null, change: null, date: "" };
-
-  const stack = [obj];
-  const seen = new Set();
-  let steps = 0;
-
-  while (stack.length && steps < 300000) {
-    const node = stack.pop();
-    steps++;
-
-    if (!node || typeof node !== "object") continue;
-    if (seen.has(node)) continue;
-    seen.add(node);
-
-    let current = null;
-    let change = null;
-    let date = "";
-
-    for (const k of CUR_KEYS) {
-      const n = toNum(node[k]);
-      if (inRange(n)) current = n;
-    }
-    for (const k of CHG_KEYS) {
-      const n = toNum(node[k]);
-      if (chgOk(n)) change = n;
-    }
-    for (const k of DATE_KEYS) {
-      const v = node?.[k];
-      if (typeof v === "string" || typeof v === "number") {
-        date = String(v);
-        break;
-      }
-    }
-
-    let score = 0;
-    if (current != null) score += 6;
-    if (change != null) score += 6;
-    if (date) score += 1;
-    if (current != null && current >= guardMin + 200 && current <= guardMax) score += 2;
-    if (change != null && Math.abs(change) <= 500) score += 2;
-
-    if (score > best.score) best = { score, current, change, date };
-
-    if (Array.isArray(node)) {
-      for (const x of node) stack.push(x);
-    } else {
-      for (const v of Object.values(node)) {
-        if (v && typeof v === "object") stack.push(v);
-      }
-    }
-  }
-
-  if (best.current == null || best.change == null) return null;
-
-  const prev = best.current - best.change;
-  const pct = prev !== 0 ? ((best.current / prev - 1) * 100) : null;
-
-  return { date: best.date || "", current: best.current, prev, change: best.change, pct };
-}
-
-/* ---------------- 1) US indices from Daum (direct JSON endpoints, no browser) ---------------- */
+/* ---------- 1) Daum US index (capture XHR JSON via Playwright) ---------- */
 /**
- * Daum sometimes changes endpoint shapes. We try multiple known candidates.
- * We DO NOT assume one fixed URL.
+ * Why this works:
+ * - Daum often renders values via XHR after page load.
+ * - Instead of parsing HTML, we wait for the JSON API response inside the browser.
  */
-async function fetchDaumGlobalIndex(code) {
+async function fetchDaumGlobalViaXHR(page, code) {
   const pageUrl = `https://finance.daum.net/global/quotes/${code}`;
 
-  const urls = [
-    // candidates (Daum has used different ones)
-    `https://finance.daum.net/api/quote/${code}`,
-    `https://finance.daum.net/api/quotes/${code}`,
-    `https://finance.daum.net/api/quotes/${code}?summary=true`,
-    `https://finance.daum.net/api/global/quote/${code}`,
-    `https://finance.daum.net/api/global/quotes/${code}`,
-    `https://finance.daum.net/api/quotes/${code}/summary`,
-  ];
+  const isTarget = (url) =>
+    url.includes("finance.daum.net/api/") &&
+    (url.includes(`/quote/${code}`) || url.includes(`/quotes/${code}`) || url.includes(code));
 
-  const guard =
-    code === "US.SP500" ? { min: 1000, max: 20000 } : { min: 1000, max: 60000 };
+  // Wait for the first matching JSON response after navigation
+  const respPromise = page.waitForResponse(
+    (r) => {
+      const url = r.url();
+      return isTarget(url) && r.status() === 200;
+    },
+    { timeout: 20000 }
+  );
 
-  const headers = {
-    "user-agent": "Mozilla/5.0",
-    "accept": "application/json, text/plain, */*",
-    "referer": pageUrl,
-  };
+  await page.goto(pageUrl, { waitUntil: "domcontentloaded" });
 
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, { headers });
-      if (!res.ok) continue;
-
-      const js = await res.json();
-      // common wrappers: {data: {...}} or {data: {quote: {...}}}
-      const roots = [js, js?.data, js?.data?.quote, js?.quote].filter(Boolean);
-
-      for (const r of roots) {
-        const got = deepFindQuoteFields(r, guard.min, guard.max);
-        if (got) return got;
-      }
-
-      // if wrapper is different, just scan whole json
-      const got2 = deepFindQuoteFields(js, guard.min, guard.max);
-      if (got2) return got2;
-    } catch {
-      // try next
-    }
+  let js;
+  try {
+    const resp = await respPromise;
+    js = await resp.json();
+  } catch {
+    return null;
   }
 
-  return null;
+  const d = js?.data ?? js;
+
+  // Common Daum fields
+  const current = toNum(d?.tradePrice ?? d?.closePrice ?? d?.price ?? d?.indexValue);
+  const change = toNum(d?.changePrice ?? d?.change ?? d?.changeValue);
+  const date = String(d?.tradeDate ?? d?.date ?? "");
+
+  if (current == null || change == null) return null;
+
+  const prev = current - change;
+  const pct = prev !== 0 ? ((current / prev - 1) * 100) : null;
+
+  return { date, current, prev, change, pct };
 }
 
-/* ---------------- 2) NASDAQ market cap (download sum) ---------------- */
+/* ---------- 2) NASDAQ total market cap (download sum) ---------- */
 async function fetchNasdaqTotalTril() {
   const res = await fetch("https://api.nasdaq.com/api/screener/stocks?download=true", {
     headers: {
       "user-agent": "Mozilla/5.0",
-      "referer": "https://www.nasdaq.com/market-activity/stocks/screener",
-      "origin": "https://www.nasdaq.com",
+      referer: "https://www.nasdaq.com/market-activity/stocks/screener",
+      origin: "https://www.nasdaq.com",
     },
   });
   if (!res.ok) return null;
@@ -167,23 +91,21 @@ async function fetchNasdaqTotalTril() {
   return sum / 1e12;
 }
 
-/* ---------------- 3) S&P500 market cap (FinanceCharts download Excel) ---------------- */
+/* ---------- 3) S&P500 total market cap (FinanceCharts download) ---------- */
 async function fetchSP500TotalTril() {
   const res = await fetch("https://www.financecharts.com/screener/sp-500?download=1", {
     headers: {
       "user-agent": "Mozilla/5.0",
-      "referer": "https://www.financecharts.com/screener/sp-500",
-      "accept": "*/*",
+      referer: "https://www.financecharts.com/screener/sp-500",
     },
   });
   if (!res.ok) return null;
 
   const buf = Buffer.from(await res.arrayBuffer());
-
-  // If blocked and HTML comes back, XLSX.read will throw
   const wb = XLSX.read(buf, { type: "buffer" });
   const ws = wb.Sheets[wb.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true });
+
   if (!rows || rows.length < 2) return null;
 
   const header = rows[0].map((x) => String(x ?? "").toLowerCase());
@@ -213,47 +135,91 @@ async function fetchSP500TotalTril() {
   return sumUsd / 1e12;
 }
 
-/* ---------------- MAIN ---------------- */
+/* ---------- MAIN ---------- */
 (async () => {
   const now = kstNow();
 
-  const sp = await fetchDaumGlobalIndex("US.SP500");
-  const nq = await fetchDaumGlobalIndex("US.COMP");
+  // Always output both rows (never empty)
+  const spRow = {
+    type: "us_index",
+    code: "S&P 500",
+    date: "",
+    value: "",
+    prev_value: "",
+    change: "",
+    change_pct: "",
+    market_cap: "",
+    asof_kst: now,
+    fetched_at_kst: now,
+  };
 
-  let spCap = null;
-  let nqCap = null;
+  const nqRow = {
+    type: "us_index",
+    code: "NASDAQ Composite",
+    date: "",
+    value: "",
+    prev_value: "",
+    change: "",
+    change_pct: "",
+    market_cap: "",
+    asof_kst: now,
+    fetched_at_kst: now,
+  };
 
-  try { spCap = await fetchSP500TotalTril(); } catch { spCap = null; }
-  try { nqCap = await fetchNasdaqTotalTril(); } catch { nqCap = null; }
+  // Daum values (via XHR capture)
+  try {
+    const browser = await chromium.launch();
+    const page = await browser.newPage({ userAgent: "Mozilla/5.0" });
 
-  const rows = [
-    {
-      type: "us_index",
-      code: "S&P 500",
-      date: sp?.date ?? "",
-      value: fmt(sp?.current),
-      prev_value: fmt(sp?.prev),
-      change: fmt(sp?.change),
-      change_pct: fmtPct(sp?.pct),
-      market_cap: fmtTril(spCap),
-      asof_kst: spCap != null ? `${now} | FinanceCharts download` : `${now} | FinanceCharts download (failed)`,
-      fetched_at_kst: now
-    },
-    {
-      type: "us_index",
-      code: "NASDAQ Composite",
-      date: nq?.date ?? "",
-      value: fmt(nq?.current),
-      prev_value: fmt(nq?.prev),
-      change: fmt(nq?.change),
-      change_pct: fmtPct(nq?.pct),
-      market_cap: fmtTril(nqCap),
-      asof_kst: nqCap != null ? `${now} | Nasdaq Screener download` : `${now} | Nasdaq Screener download (failed)`,
-      fetched_at_kst: now
+    const sp = await fetchDaumGlobalViaXHR(page, "US.SP500");
+    if (sp) {
+      spRow.date = sp.date;
+      spRow.value = fmt(sp.current);
+      spRow.prev_value = fmt(sp.prev);
+      spRow.change = fmt(sp.change);
+      spRow.change_pct = fmtPct(sp.pct);
     }
-  ];
 
-  const payload = { updated_at: now, rows };
+    const nq = await fetchDaumGlobalViaXHR(page, "US.COMP");
+    if (nq) {
+      nqRow.date = nq.date;
+      nqRow.value = fmt(nq.current);
+      nqRow.prev_value = fmt(nq.prev);
+      nqRow.change = fmt(nq.change);
+      nqRow.change_pct = fmtPct(nq.pct);
+    }
+
+    await browser.close();
+  } catch {
+    // keep blanks if Daum blocks, but file still writes
+  }
+
+  // Market caps (download style)
+  try {
+    const spCap = await fetchSP500TotalTril();
+    if (spCap != null) {
+      spRow.market_cap = fmtTril(spCap);
+      spRow.asof_kst = `${spRow.asof_kst} | FinanceCharts download`;
+    } else {
+      spRow.asof_kst = `${spRow.asof_kst} | FinanceCharts download (failed)`;
+    }
+  } catch {
+    spRow.asof_kst = `${spRow.asof_kst} | FinanceCharts download (failed)`;
+  }
+
+  try {
+    const nqCap = await fetchNasdaqTotalTril();
+    if (nqCap != null) {
+      nqRow.market_cap = fmtTril(nqCap);
+      nqRow.asof_kst = `${nqRow.asof_kst} | Nasdaq Screener download`;
+    } else {
+      nqRow.asof_kst = `${nqRow.asof_kst} | Nasdaq Screener download (failed)`;
+    }
+  } catch {
+    nqRow.asof_kst = `${nqRow.asof_kst} | Nasdaq Screener download (failed)`;
+  }
+
+  const payload = { updated_at: now, rows: [spRow, nqRow] };
   fs.writeFileSync("docs/us.json", JSON.stringify(payload, null, 2), "utf-8");
   console.log(payload);
 })();
