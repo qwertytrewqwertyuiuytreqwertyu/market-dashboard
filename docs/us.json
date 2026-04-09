@@ -1,29 +1,29 @@
 {
-  "updated_at": "2026-04-08 12:17:44",
+  "updated_at": "2026-04-09 11:53:41",
   "rows": [
     {
       "type": "us_index",
       "code": "S&P 500",
-      "date": "20260407",
-      "value": "6616.85",
-      "prev_value": "6611.83",
-      "change": "5.02",
-      "change_pct": "0.08%",
+      "date": "20260408",
+      "value": "6782.81",
+      "prev_value": "6616.85",
+      "change": "165.96",
+      "change_pct": "2.51%",
       "market_cap": "",
-      "asof_kst": "2026-04-08 12:17:44 | FinanceCharts download (failed)",
-      "fetched_at_kst": "2026-04-08 12:17:44"
+      "asof_kst": "2026-04-09 11:53:41 | FinanceCharts download (failed)",
+      "fetched_at_kst": "2026-04-09 11:53:41"
     },
     {
       "type": "us_index",
       "code": "NASDAQ Composite",
-      "date": "",
-      "value": "",
-      "prev_value": "",
-      "change": "",
-      "change_pct": "",
-      "market_cap": "91.92 T USD",
-      "asof_kst": "2026-04-08 12:17:44 | Nasdaq Screener download",
-      "fetched_at_kst": "2026-04-08 12:17:44"
+      "date": "20260408",
+      "value": "22634.99",
+      "prev_value": "22017.85",
+      "change": "617.15",
+      "change_pct": "2.80%",
+      "market_cap": "94.34 T USD",
+      "asof_kst": "2026-04-09 11:53:41 | Nasdaq Screener download",
+      "fetched_at_kst": "2026-04-09 11:53:41"
     }
   ]
 }
