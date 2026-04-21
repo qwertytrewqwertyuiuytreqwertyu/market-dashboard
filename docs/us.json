@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-04-20 12:36:30",
+  "updated_at": "2026-04-21 12:28:47",
   "rows": [
     {
       "type": "us_index",
@@ -10,20 +10,20 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-04-20 12:36:30 | FinanceCharts download (failed)",
-      "fetched_at_kst": "2026-04-20 12:36:30"
+      "asof_kst": "2026-04-21 12:28:47 | FinanceCharts download (failed)",
+      "fetched_at_kst": "2026-04-21 12:28:47"
     },
     {
       "type": "us_index",
       "code": "NASDAQ Composite",
-      "date": "",
-      "value": "",
-      "prev_value": "",
-      "change": "",
-      "change_pct": "",
-      "market_cap": "98.86 T USD",
-      "asof_kst": "2026-04-20 12:36:30 | Nasdaq Screener download",
-      "fetched_at_kst": "2026-04-20 12:36:30"
+      "date": "20260420",
+      "value": "24404.39",
+      "prev_value": "24468.48",
+      "change": "-64.09",
+      "change_pct": "-0.26%",
+      "market_cap": "98.67 T USD",
+      "asof_kst": "2026-04-21 12:28:47 | Nasdaq Screener download",
+      "fetched_at_kst": "2026-04-21 12:28:47"
     }
   ]
 }
