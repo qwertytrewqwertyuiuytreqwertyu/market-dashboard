@@ -1,17 +1,17 @@
 {
-  "updated_at": "2026-08-27 17:44:44",
+  "updated_at": "2026-08-28 19:57:37",
   "rows": [
     {
       "type": "us_index",
       "code": "S&P 500",
-      "date": "20260826",
-      "value": "7675.70",
-      "prev_value": "7677.28",
-      "change": "-1.58",
-      "change_pct": "-0.02%",
+      "date": "",
+      "value": "",
+      "prev_value": "",
+      "change": "",
+      "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-08-27 17:44:44 | FinanceCharts download (failed)",
-      "fetched_at_kst": "2026-08-27 17:44:44"
+      "asof_kst": "2026-08-28 19:57:37 | FinanceCharts download (failed)",
+      "fetched_at_kst": "2026-08-28 19:57:37"
     },
     {
       "type": "us_index",
@@ -21,9 +21,9 @@
       "prev_value": "",
       "change": "",
       "change_pct": "",
-      "market_cap": "108.91 T USD",
-      "asof_kst": "2026-08-27 17:44:44 | Nasdaq Screener download",
-      "fetched_at_kst": "2026-08-27 17:44:44"
+      "market_cap": "109.49 T USD",
+      "asof_kst": "2026-08-28 19:57:37 | Nasdaq Screener download",
+      "fetched_at_kst": "2026-08-28 19:57:37"
     }
   ]
 }
