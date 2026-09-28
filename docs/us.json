@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-27 13:52:27",
+  "updated_at": "2026-09-28 13:54:27",
   "rows": [
     {
       "type": "us_index",
@@ -10,8 +10,8 @@
       "change": "",
       "change_pct": "",
       "market_cap": "",
-      "asof_kst": "2026-09-27 13:52:27 | FinanceCharts download (failed)",
-      "fetched_at_kst": "2026-09-27 13:52:27"
+      "asof_kst": "2026-09-28 13:54:27 | FinanceCharts download (failed)",
+      "fetched_at_kst": "2026-09-28 13:54:27"
     },
     {
       "type": "us_index",
@@ -22,8 +22,8 @@
       "change": "",
       "change_pct": "",
       "market_cap": "108.74 T USD",
-      "asof_kst": "2026-09-27 13:52:27 | Nasdaq Screener download",
-      "fetched_at_kst": "2026-09-27 13:52:27"
+      "asof_kst": "2026-09-28 13:54:27 | Nasdaq Screener download",
+      "fetched_at_kst": "2026-09-28 13:54:27"
     }
   ]
 }
