@@ -1,29 +1,29 @@
 {
-  "updated_at": "2026-11-23 16:01:40",
+  "updated_at": "2026-11-24 18:27:54",
   "rows": [
     {
       "type": "us_index",
       "code": "S&P 500",
-      "date": "20261120",
-      "value": "6910.39",
-      "prev_value": "7175.83",
-      "change": "-265.44",
-      "change_pct": "-3.70%",
+      "date": "20261123",
+      "value": "7237.17",
+      "prev_value": "6910.39",
+      "change": "326.78",
+      "change_pct": "4.73%",
       "market_cap": "",
-      "asof_kst": "2026-11-23 16:01:40 | FinanceCharts download (failed)",
-      "fetched_at_kst": "2026-11-23 16:01:40"
+      "asof_kst": "2026-11-24 18:27:54 | FinanceCharts download (failed)",
+      "fetched_at_kst": "2026-11-24 18:27:54"
     },
     {
       "type": "us_index",
       "code": "NASDAQ Composite",
-      "date": "20261120",
-      "value": "22617.73",
-      "prev_value": "23879.20",
-      "change": "-1261.47",
-      "change_pct": "-5.28%",
-      "market_cap": "102.33 T USD",
-      "asof_kst": "2026-11-23 16:01:40 | Nasdaq Screener download",
-      "fetched_at_kst": "2026-11-23 16:01:40"
+      "date": "20261123",
+      "value": "24089.56",
+      "prev_value": "22617.73",
+      "change": "1471.83",
+      "change_pct": "6.51%",
+      "market_cap": "97.84 T USD",
+      "asof_kst": "2026-11-24 18:27:54 | Nasdaq Screener download",
+      "fetched_at_kst": "2026-11-24 18:27:54"
     }
   ]
 }
